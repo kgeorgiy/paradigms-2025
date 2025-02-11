@@ -1,5 +1,5 @@
 /**
- * Tests for <a href="https://www.kgeorgiy.info/courses/prog-intro/homeworks.html#expressions">Expressions</a> homework
+ * Tests for <a href="https://www.kgeorgiy.info/courses/paradigms/homeworks.html#expressions">Expressions</a> homework
  * of <a href="https://www.kgeorgiy.info/courses/paradigms/">Paradigms of Programming</a> course.
  *
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
