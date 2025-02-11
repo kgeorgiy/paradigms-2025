@@ -1,6 +1,7 @@
 package expression.generic;
 
 import base.*;
+import expression.ToMiniString;
 import expression.common.*;
 import expression.parser.ParserTestSet;
 
@@ -29,13 +30,12 @@ public class GenericTester extends Tester {
     private final Set<String> operations = new HashSet<>();
     private final List<NodeRenderer.Paren> parens = new ArrayList<>(List.of(NodeRenderer.paren("(", ")")));
 
-    private final TestGenerator<Integer> generator;
-    private final Map<String, Mode<?>> modes = new HashMap<>();
+    private final TestGeneratorBuilder<Integer> generator;
+    private final List<Mode.Builder<?>> modes = new ArrayList<>();
 
     public GenericTester(final TestCounter counter) {
         super(counter);
-        generator = new TestGenerator<>(
-                counter,
+        generator = new TestGeneratorBuilder<>(
                 random(),
                 random()::nextInt,
                 ParserTestSet.CONSTS,
@@ -49,25 +49,22 @@ public class GenericTester extends Tester {
 
     @Override
     public void test() {
-        modes.values().forEach(mode -> mode.freeze(operations));
+        final List<Mode> modes = this.modes.stream()
+                .map(mode -> mode.build(this))
+                .toList();
 
         for (final Named<IF<?>> test : tests) {
             final String[] parts = test.name().split(": ");
             testFull(parts[0], parts[1], test.value());
         }
 
-        counter.scope(
-                "basic",
-                () -> generator.testBasic(VARS, test -> test(test, true))
-        );
-        counter.scope(
-                "random",
-                () -> generator.testRandom(
-                        20 + (TestCounter.DENOMINATOR - 1) * 2,
-                        VARS,
-                        test -> test(test, false)
-                )
-        );
+        final TestGenerator<Integer, F<?>> generator = this.generator.build(VARS);
+        counter.scope("basic", () -> generator.testBasic(test(true, modes)));
+        counter.scope("random", () -> generator.testRandom(
+                counter,
+                20 + (TestCounter.DENOMINATOR - 1) * 2,
+                test(false, modes)
+        ));
     }
 
     private void testFull(final String mode, final String expression, final IF<?> f) {
@@ -89,8 +86,10 @@ public class GenericTester extends Tester {
         );
     }
 
-    private void test(final TestGenerator.Test<Integer, F<?>> test, final boolean full) {
-        modes.values().forEach(mode -> mode.test(test.expr, test.render(NodeRenderer.FULL.withParens(parens)), full));
+    private Consumer<TestGenerator.Test<Integer, F<?>>> test(final boolean full, final List<Mode> modes) {
+        final NodeRenderer.Settings settings = NodeRenderer.FULL.withParens(parens);
+        return test -> modes
+                .forEach(mode -> mode.test(test.expr, test.render(settings), full));
     }
 
     private <T> void test(final String mode, final String expression, final IF<T> f, final int x1, final int x2, final int y1, final int y2, final int z1, final int z2) {
@@ -130,65 +129,83 @@ public class GenericTester extends Tester {
         }
     }
 
-    private final class Mode<T> {
-        private final String mode;
-        private final IntFunction<T> constant;
-        private final Renderer<Integer, Unit, F<T>> renderer;
-        private final List<Named<UnaryOperator<F<T>>>> unary;
-        private final List<Named<BinaryOperator<F<T>>>> binary;
-        private final IntUnaryOperator fixer;
-
-        public Mode(
+    /* package-private */ interface Mode {
+        static <T> Builder<T> builder(
                 final String mode,
                 final IntFunction<T> constant,
-                final List<Named<UnaryOperator<F<T>>>> unary,
-                final List<Named<BinaryOperator<F<T>>>> binary,
                 final IntUnaryOperator fixer
         ) {
-            this.mode = mode;
-            this.constant = constant;
-            this.fixer = fixer;
-
-            renderer = new Renderer<>(value -> (x, y, z) -> constant.apply(value));
-//            renderer.add("x", 0, (unit, args) -> (x, y, z) -> x);
-//            renderer.add("y", 0, (unit, args) -> (x, y, z) -> y);
-//            renderer.add("z", 0, (unit, args) -> (x, y, z) -> z);
-            this.unary = unary;
-            this.binary = binary;
-            for (final Named<UnaryOperator<F<T>>> op : unary) {
-                renderer.unary(op.name(), (unit, arg) -> op.value().apply(arg));
-            }
-            for (final Named<BinaryOperator<F<T>>> op : binary) {
-                renderer.binary(op.name(), (unit, a, b) -> op.value().apply(a, b));
-            }
+            return new Builder<>(mode, constant, fixer);
         }
 
-        public void test(final Expr<Integer, ? extends F<?>> expr, final String expression, final boolean full) {
-            final String fixed = fixer == IntUnaryOperator.identity()
-                    ? expression
-                    : generator.full(expr.node(node -> node.cata(
-                            c -> Node.constant(fixer.applyAsInt(c)),
-                            Node::op, Node::op, Node::op
-                    )));
-            @SuppressWarnings("unchecked") final Expr<Integer, F<T>> converted = (Expr<Integer, F<T>>) expr;
-            final F<T> expected = renderer.render(Unit.INSTANCE, converted);
-            final IF<T> f = (x, y, z) -> expected.apply(constant.apply(x), constant.apply(y), constant.apply(z));
-            if (full) {
-                testFull(mode, fixed, f);
-            } else {
-                testShort(mode, fixed, f);
-            }
-        }
+        void test(final Expr<Integer, ? extends F<?>> expr, final String expression, final boolean full);
 
-        private void freeze(final Set<String> operations) {
-            final Set<String> ops = Stream.concat(
-                    unary.stream().map(op -> op.name() + ":1"),
-                    binary.stream().map(op -> op.name() + ":2")
-            ).collect(Collectors.toUnmodifiableSet());
-            final List<String> diff = operations.stream()
-                    .filter(Predicate.not(ops::contains))
-                    .toList();
-            Asserts.assertTrue(String.format("Missing operations for %s: %s", mode, diff), diff.isEmpty());
+        /* package-private */ final class Builder<T> implements Consumer<GenericTester> {
+            private final String mode;
+            private final IntFunction<T> constant;
+            private final IntUnaryOperator fixer;
+            private final List<Named<UnaryOperator<GenericTester.F<T>>>> unary = new ArrayList<>();
+            private final List<Named<BinaryOperator<GenericTester.F<T>>>> binary = new ArrayList<>();
+
+            private Builder(final String mode, final IntFunction<T> constant, final IntUnaryOperator fixer) {
+                this.mode = mode;
+                this.constant = constant;
+                this.fixer = fixer;
+            }
+
+            public Builder<T> unary(final String name, final UnaryOperator<T> op) {
+                unary.add(Named.of(name, arg -> (x, y, z) -> op.apply(arg.apply(x, y, z))));
+                return this;
+            }
+
+            public Builder<T> binary(final String name, final BinaryOperator<T> op) {
+                binary.add(Named.of(name, (a, b) -> (x, y, z) -> op.apply(a.apply(x, y, z), b.apply(x, y, z))));
+                return this;
+            }
+
+            @Override
+            public void accept(final GenericTester tester) {
+                tester.modes.add(this);
+            }
+
+            private Mode build(final GenericTester tester) {
+                final Set<String> ops = Stream.concat(
+                        unary.stream().map(op -> op.name() + ":1"),
+                        binary.stream().map(op -> op.name() + ":2")
+                ).collect(Collectors.toUnmodifiableSet());
+                final List<String> diff = tester.operations.stream()
+                        .filter(Predicate.not(ops::contains))
+                        .toList();
+                Asserts.assertTrue(String.format("Missing operations for %s: %s", mode, diff), diff.isEmpty());
+
+                final Renderer.Builder<Integer, Unit, GenericTester.F<T>> builder
+                        = Renderer.builder(value -> (x, y, z) -> constant.apply(value));
+                unary.forEach(op -> builder.unary(op.name(), (unit, arg) -> op.value().apply(arg)));
+                binary.forEach(op -> builder.binary(op.name(), (unit, a, b) -> op.value().apply(a, b)));
+                final Renderer<Integer, Unit, F<T>> renderer = builder.build();
+                final TestGenerator<Integer, F<?>> genRenderer = tester.generator.build(VARS);
+
+                return (expr, expression, full) -> {
+                    final String fixed = fixer == IntUnaryOperator.identity()
+                            ? expression
+                            : genRenderer.render(cata(expr), NodeRenderer.FULL);
+                    @SuppressWarnings("unchecked") final Expr<Integer, F<T>> converted = (Expr<Integer, F<T>>) expr;
+                    final F<T> expected = renderer.render(converted, Unit.INSTANCE);
+                    final IF<T> f = (x, y, z) -> expected.apply(constant.apply(x), constant.apply(y), constant.apply(z));
+                    if (full) {
+                        tester.testFull(mode, fixed, f);
+                    } else {
+                        tester.testShort(mode, fixed, f);
+                    }
+                };
+            }
+
+            private Expr<Integer, ? extends F<?>> cata(final Expr<Integer, ? extends F<?>> expr) {
+                return expr.node(node -> node.cata(
+                        c -> Node.constant(fixer.applyAsInt(c)),
+                        Node::op, Node::op, Node::op
+                ));
+            }
         }
     }
 
@@ -198,17 +215,7 @@ public class GenericTester extends Tester {
     }
 
     @FunctionalInterface
-    protected interface F<T> {
+    protected interface F<T> extends ToMiniString {
         T apply(T x, T y, T z);
-    }
-
-    protected <T> void mode(
-            final String mode,
-            final IntFunction<T> constant,
-            final List<Named<UnaryOperator<F<T>>>> unary,
-            final List<Named<BinaryOperator<F<T>>>> binary,
-            final IntUnaryOperator fixer
-    ) {
-        modes.put(mode, new Mode<>(mode, constant, unary, binary, fixer));
     }
 }

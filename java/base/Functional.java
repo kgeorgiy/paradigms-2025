@@ -23,6 +23,16 @@ public final class Functional {
                 .collect(Collectors.toUnmodifiableList());
     }
 
+    public static <K, T, R> Map<K, R> mapValues(final Map<K, T> map, final Function<T, R> f) {
+        return map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> f.apply(e.getValue())));
+    }
+
+    @SafeVarargs
+    public static <K, T> Map<K, T> mergeMaps(final Map<K, T>... maps) {
+        return Stream.of(maps).flatMap(m -> m.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a));
+    }
+
     @SafeVarargs
     public static <T> List<T> concat(final Collection<? extends T>... items) {
         final List<T> result = new ArrayList<>();

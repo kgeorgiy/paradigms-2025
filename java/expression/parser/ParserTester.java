@@ -5,10 +5,7 @@ import base.TestCounter;
 import base.Tester;
 import base.Unit;
 import expression.ToMiniString;
-import expression.common.ExpressionKind;
-import expression.common.NodeRenderer;
-import expression.common.Renderer;
-import expression.common.TestGenerator;
+import expression.common.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,16 +17,16 @@ import java.util.function.LongToIntFunction;
  * @author Georgiy Korneev (kgeorgiy@kgeorgiy.info)
  */
 public class ParserTester extends Tester {
-    /* package-private */ final TestGenerator<Integer> generator;
-    /* package-private */ final Renderer<Integer, Unit, ParserTestSet.TExpression> renderer;
+    /* package-private */ final TestGeneratorBuilder<Integer> generator;
+    /* package-private */ final Renderer.Builder<Integer, Unit, ParserTestSet.TExpression> renderer;
     private final List<ParserTestSet.ParsedKind<?, ?>> kinds = new ArrayList<>();
     /* package-private */  final List<NodeRenderer.Paren> parens = new ArrayList<>(List.of(NodeRenderer.paren("(", ")")));
 
     public ParserTester(final TestCounter counter) {
         super(counter);
-        renderer = new Renderer<>(c -> vars -> c);
+        renderer = Renderer.builder(c -> vars -> c);
         final ExtendedRandom random = counter.random();
-        generator = new TestGenerator<>(counter, random, random::nextInt, ParserTestSet.CONSTS, true);
+        generator = new TestGeneratorBuilder<>(random, random::nextInt, ParserTestSet.CONSTS, true);
     }
 
     public void unary(final String name, final int priority, final BiFunction<Long, LongToIntFunction, Long> op) {

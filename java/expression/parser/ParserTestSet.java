@@ -7,6 +7,7 @@ import expression.common.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -44,24 +45,24 @@ public class ParserTestSet<E extends ToMiniString, C> {
         counter = tester.getCounter();
     }
 
-    private void examples() {
-        example("$x+2", (x, y, z) -> x + 2);
-        example("2-$y", (x, y, z) -> 2 - y);
-        example("  3*  $z  ", (x, y, z) -> 3 * z);
-        example("$x/  -  2", (x, y, z) -> -x / 2);
-        example("$x*$y+($z-1   )/10", (x, y, z) -> x * y + (int) (z - 1) / 10);
-        example("-(-(-\t\t-5 + 16   *$x*$y) + 1 * $z) -(((-11)))", (x, y, z) -> -(-(5 + 16 * x * y) + z) + 11);
-        example("" + Integer.MAX_VALUE, (x, y, z) -> (long) Integer.MAX_VALUE);
-        example("" + Integer.MIN_VALUE, (x, y, z) -> (long) Integer.MIN_VALUE);
-        example("$x--$y--$z", (x, y, z) -> x + y + z);
-        example("((2+2))-0/(--2)*555", (x, y, z) -> 4L);
-        example("$x-$x+$y-$y+$z-($z)", (x, y, z) -> 0L);
-        example("(".repeat(300) + "$x + $y + (-10*-$z)" + ")".repeat(300), (x, y, z) -> x + y + 10 * z);
-        example("$x / $y / $z", (x, y, z) -> y == 0 || z == 0 ? Reason.DBZ.error() : (int) x / (int) y / z);
+    private void examples(final TestGenerator<Integer, E> generator) {
+        example(generator, "$x+2", (x, y, z) -> x + 2);
+        example(generator, "2-$y", (x, y, z) -> 2 - y);
+        example(generator, "  3*  $z  ", (x, y, z) -> 3 * z);
+        example(generator, "$x/  -  2", (x, y, z) -> -x / 2);
+        example(generator, "$x*$y+($z-1   )/10", (x, y, z) -> x * y + (int) (z - 1) / 10);
+        example(generator, "-(-(-\t\t-5 + 16   *$x*$y) + 1 * $z) -(((-11)))", (x, y, z) -> -(-(5 + 16 * x * y) + z) + 11);
+        example(generator, "" + Integer.MAX_VALUE, (x, y, z) -> (long) Integer.MAX_VALUE);
+        example(generator, "" + Integer.MIN_VALUE, (x, y, z) -> (long) Integer.MIN_VALUE);
+        example(generator, "$x--$y--$z", (x, y, z) -> x + y + z);
+        example(generator, "((2+2))-0/(--2)*555", (x, y, z) -> 4L);
+        example(generator, "$x-$x+$y-$y+$z-($z)", (x, y, z) -> 0L);
+        example(generator, "(".repeat(300) + "$x + $y + (-10*-$z)" + ")".repeat(300), (x, y, z) -> x + y + 10 * z);
+        example(generator, "$x / $y / $z", (x, y, z) -> y == 0 || z == 0 ? Reason.DBZ.error() : (int) x / (int) y / z);
     }
 
-    private void example(final String name, final ExampleExpression expression) {
-        final List<Pair<String, E>> variables = tester.generator.variables(kind.kind.variables(), 3);
+    private void example(final TestGenerator<Integer, E> generator, final String name, final ExampleExpression expression) {
+        final List<Pair<String, E>> variables = generator.variables(3);
         final List<String> names = Functional.map(variables, Pair::first);
         final String mangled = name
                 .replace("$x", names.get(0))
@@ -76,12 +77,15 @@ public class ParserTestSet<E extends ToMiniString, C> {
     }
 
     protected void test() {
-        counter.scope("Basic tests", () -> tester.generator.testBasic(kind.kind.variables(), this::test));
-        counter.scope("Handmade tests", this::examples);
-        counter.scope("Random tests", () -> tester.generator.testRandom(1, kind.kind.variables(), this::test));
+        final TestGenerator<Integer, E> generator = tester.generator.build(kind.kind.variables());
+        final Renderer<Integer, Unit, TExpression> renderer = tester.renderer.build();
+        final Consumer<TestGenerator.Test<Integer, E>> consumer = test -> test(renderer, test);
+        counter.scope("Basic tests", () -> generator.testBasic(consumer));
+        counter.scope("Handmade tests", () -> examples(generator));
+        counter.scope("Random tests", () -> generator.testRandom(counter, 1, consumer));
     }
 
-    private void test(final TestGenerator.Test<Integer, E> test) {
+    private void test(final Renderer<Integer, Unit, TExpression> renderer, final TestGenerator.Test<Integer, E> test) {
         final Expr<Integer, E> expr = test.expr;
         final List<Pair<String, E>> vars = expr.variables();
         final List<String> variables = Functional.map(vars, Pair::first);
@@ -101,10 +105,13 @@ public class ParserTestSet<E extends ToMiniString, C> {
         checkToString(full, mini, "noSpaces", parse(removeSpaces(full), variables, false));
         checkToString(full, mini, "extraSpaces", parse(extraSpaces(full), variables, false));
 
-        final TExpression expected = tester.renderer.render(Unit.INSTANCE, Expr.of(
-                expr.node(),
-                Functional.map(vars, (i, var) -> Pair.of(var.first(), args -> args.get(i)))
-        ));
+        final TExpression expected = renderer.render(
+                Expr.of(
+                        expr.node(),
+                        Functional.map(vars, (i, var) -> Pair.of(var.first(), args -> args.get(i)))
+                ),
+                Unit.INSTANCE
+        );
 
         check(expected, fullParsed, variables, tester.random().random(variables.size(), ExtendedRandom::nextInt), full);
         if (this.safe) {
@@ -121,7 +128,7 @@ public class ParserTestSet<E extends ToMiniString, C> {
         return parse(test.render(settings.withParens(tester.parens)), variables, false);
     }
 
-    private static final String LOOKBEHIND = "(?<![a-zA-Z0-9<>*/+-])";
+    private static final String LOOKBEHIND = "(?<![a-zA-Z0-9<>*/+=!-])";
     private static final String LOOKAHEAD = "(?![a-zA-Z0-9<>*/])";
     private static final Pattern SPACES = Pattern.compile(LOOKBEHIND + " | " + LOOKAHEAD + "|" + LOOKAHEAD + LOOKBEHIND);
     private String extraSpaces(final String expression) {

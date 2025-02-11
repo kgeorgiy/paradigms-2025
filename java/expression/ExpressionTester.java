@@ -24,7 +24,7 @@ public class ExpressionTester<E extends ToMiniString, C> extends Tester {
     private final List<Test> basic = new ArrayList<>();
     private final List<Test> advanced = new ArrayList<>();
     private final Set<String> used = new HashSet<>();
-    private final Generator generator;
+    private final GeneratorBuilder generator;
 
     private final List<Pair<ToMiniString, String>> prev = new ArrayList<>();
     private final Map<String, C> mappings;
@@ -44,7 +44,7 @@ public class ExpressionTester<E extends ToMiniString, C> extends Tester {
         this.kind = kind;
         this.mappings = mappings;
 
-        generator = new Generator(expectedConstant, kind::constant, binary, kind::randomValue);
+        generator = new GeneratorBuilder(expectedConstant, kind::constant, binary, kind::randomValue);
         generator.binary("+",  1600, add, Add.class);
         generator.binary("-", 1602, sub, Subtract.class);
         generator.binary("*",  2001, mul, Multiply.class);
@@ -162,11 +162,6 @@ public class ExpressionTester<E extends ToMiniString, C> extends Tester {
         return this;
     }
 
-    public ExpressionTester<E, C> basic(final Node<C> node, final E expression) {
-        final List<Pair<String, E>> variables = kind.variables().generate(random(), 3);
-        return basic(generator.test(new Expr<>(node, variables), kind.cast(expression)));
-    }
-
     protected ExpressionTester<E, C> advanced(final String full, final String mini, final E expected, final E actual) {
         return advancedF(full, mini, expected, vars -> actual);
     }
@@ -224,24 +219,24 @@ public class ExpressionTester<E extends ToMiniString, C> extends Tester {
         }
     }
 
-    private final class Generator {
-        private final expression.common.Generator<C> generator;
-        private final NodeRenderer<C> renderer = new NodeRenderer<>(random());
-        private final Renderer<C, Unit, E> expected;
-        private final Renderer<C, Unit, E> actual;
-        private final Renderer<C, Unit, E> copy;
+    private final class GeneratorBuilder {
+        private final Generator.Builder<C> generator;
+        private final NodeRendererBuilder<C> renderer = new NodeRendererBuilder<>(random());
+        private final Renderer.Builder<C, Unit, E> expected;
+        private final Renderer.Builder<C, Unit, E> actual;
+        private final Renderer.Builder<C, Unit, E> copy;
         private final Binary<C, E> binary;
 
-        private Generator(
+        private GeneratorBuilder(
                 final Function<C, E> expectedConstant,
                 final Function<? super C, E> actualConstant,
                 final Binary<C, E> binary,
                 final Function<ExtendedRandom, C> randomValue
         ) {
-            generator = new expression.common.Generator<>(random(), () -> randomValue.apply(random()));
-            expected = new Renderer<>(expectedConstant::apply);
-            actual = new Renderer<>(actualConstant::apply);
-            copy = new Renderer<>(actualConstant::apply);
+            generator = Generator.builder(() -> randomValue.apply(random()), random());
+            expected = Renderer.builder(expectedConstant::apply);
+            actual = Renderer.builder(actualConstant::apply);
+            copy = Renderer.builder(actualConstant::apply);
 
             this.binary = binary;
         }
@@ -269,11 +264,15 @@ public class ExpressionTester<E extends ToMiniString, C> extends Tester {
         }
 
         private void testRandom() {
-            generator.testRandom(1, counter, kind.variables(), expr -> {
+            final NodeRenderer<C> renderer = this.renderer.build();
+            final Renderer<C, Unit, E> expectedRenderer = this.expected.build();
+            final Renderer<C, Unit, E> actualRenderer = this.actual.build();
+            final expression.common.Generator<C, E> generator = this.generator.build(kind.variables(), List.of());
+            generator.testRandom(counter, 1, expr -> {
                 final String full = renderer.render(expr, NodeRenderer.FULL);
                 final String mini = renderer.render(expr, NodeRenderer.MINI);
-                final E expected = this.expected.render(Unit.INSTANCE, expr);
-                final E actual = this.actual.render(Unit.INSTANCE, expr);
+                final E expected = expectedRenderer.render(expr, Unit.INSTANCE);
+                final E actual = actualRenderer.render(expr, Unit.INSTANCE);
 
                 final List<Pair<String, E>> variables = expr.variables();
                 final List<String> names = Functional.map(variables, Pair::first);
@@ -281,18 +280,9 @@ public class ExpressionTester<E extends ToMiniString, C> extends Tester {
                         .limit(variables.size())
                         .toList();
 
-                checkEqualsAndToString(full, mini, actual, copy.render(Unit.INSTANCE, expr));
+                checkEqualsAndToString(full, mini, actual, copy.build().render(expr, Unit.INSTANCE));
                 check(full, expected, actual, names, values);
             });
-        }
-
-        public Test test(final Expr<C, E> expr, final E expression) {
-            return new Test(
-                    renderer.render(expr, NodeRenderer.FULL),
-                    renderer.render(expr, NodeRenderer.MINI),
-                    expected.render(Unit.INSTANCE, expr),
-                    vars -> expression
-            );
         }
     }
 }

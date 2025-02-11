@@ -101,7 +101,12 @@ public class ExceptionsTestSet<E extends ToMiniString, C> extends ParserTestSet<
                     }
                     final char pc = expr.charAt(pi);
                     final char nc = expr.charAt(ni);
-                    if ("-([{*∛√²³₂₃!‖⎵⎴⌊⌈".indexOf(nc) < 0 && (!Character.isLetterOrDigit(pc) || !Character.isLetterOrDigit(ch)) && nc != ch && pc != ch && !Character.isLetterOrDigit(nc) && nc != '$') {
+                    if (
+                            "-([{*∛√²³₂₃!‖⎵⎴⌊⌈=?".indexOf(nc) < 0 &&
+                            (!Character.isLetterOrDigit(pc) || !Character.isLetterOrDigit(ch)) &&
+                            nc != ch && pc != ch &&
+                            !Character.isLetterOrDigit(nc) && nc != '$'
+                    ) {
                         shouldFail(
                                 variables,
                                 "Parsing error expected for " + insert(expr, index, "<ERROR_INSERTED -->" + ch + "<-- ERROR_INSERTED>"),
