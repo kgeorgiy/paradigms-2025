@@ -1,7 +1,7 @@
 package expression.generic;
 
 import base.Selector;
-import expression.parser.FullOperations;
+import expression.parser.Operations;
 
 import java.math.BigInteger;
 import java.util.function.*;
