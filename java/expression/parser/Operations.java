@@ -19,6 +19,16 @@ public final class Operations {
     public static final Operation MULTIPLY  = binary("*", 2001, (a, b) -> a * b);
     public static final Operation DIVIDE    = binary("/", 2002, (a, b) -> b == 0 ? Reason.DBZ.error() : a / b);
 
+    // === CmpEq
+
+    public static final Operation LESS = binary("<", 202, (a, b) -> a < b ? 1 : 0);
+    public static final Operation GREATER = binary(">", 202, (a, b) -> a > b ? 1 : 0);
+    public static final Operation LESS_EQ = binary("<=", 202, (a, b) -> a <= b ? 1 : 0);
+    public static final Operation GREATER_EQ = binary(">=", 202, (a, b) -> a >= b ? 1 : 0);
+    public static final Operation EQUAL = binary("==", 22, (a, b) -> a == b ? 1 : 0);
+    public static final Operation NOT_EQUAL = binary("!=", 22, (a, b) -> a != b ? 1 : 0);
+
+
     // === Common
 
     private Operations() {

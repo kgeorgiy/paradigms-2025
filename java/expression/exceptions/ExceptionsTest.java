@@ -12,8 +12,16 @@ public final class ExceptionsTest {
     private static final ExpressionParser PARSER = new ExpressionParser();
     private static final Operation TRIPLE = kind(TripleExpression.KIND, (expr, variables) -> PARSER.parse(expr));
 
+    // === Parens
+
+    public static final Operation PARENS = tester -> tester.parens("{", "}", "[", "]");
+
+
+
+    // === Common
     public static final Selector SELECTOR = Selector.composite(ExceptionsTest.class, ExceptionsTester::new, "easy", "hard")
             .variant("Base", TRIPLE, ADD, SUBTRACT, MULTIPLY, DIVIDE, NEGATE)
+            .variant("3637", PARENS, LESS, LESS_EQ, GREATER, GREATER_EQ, EQUAL, NOT_EQUAL)
             .selector();
 
     private ExceptionsTest() {
