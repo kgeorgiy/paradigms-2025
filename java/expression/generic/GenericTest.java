@@ -1,7 +1,6 @@
 package expression.generic;
 
 import base.Selector;
-import expression.parser.Operations;
 
 import java.math.BigInteger;
 import java.util.function.*;
@@ -31,6 +30,9 @@ public final class GenericTest {
             .binary("/", (a, b) -> i(a / (long) b))
             .unary("-", a -> i(- (long) a))
 
+            .binary("<?", Math::min)
+            .binary(">?", Math::max)
+
             .binary("<", (a, b) -> a < b ? 1 : 0)
             .binary(">", (a, b) -> a > b ? 1 : 0)
             .binary("<=", (a, b) -> a <= b ? 1 : 0)
@@ -54,6 +56,9 @@ public final class GenericTest {
             .binary("/", (a, b) -> a / b)
             .unary("-", a -> -a)
 
+            .binary("<?", Math::min)
+            .binary(">?", Math::max)
+
             .binary("<", d(v -> v < 0))
             .binary(">", d(v -> v > 0))
             .binary("<=", d(v -> v <= 0))
@@ -75,6 +80,9 @@ public final class GenericTest {
             .binary("*", BigInteger::multiply)
             .binary("/", BigInteger::divide)
             .unary("-", BigInteger::negate)
+
+            .binary("<?", BigInteger::min)
+            .binary(">?", BigInteger::max)
 
             .binary("<", bi(v -> v < 0))
             .binary(">", bi(v -> v > 0))
@@ -100,6 +108,11 @@ public final class GenericTest {
     private static final Consumer<GenericTester> NOT_EQUAL = binary("!=", 20);
 
 
+    // === MinMax
+    private static final Consumer<GenericTester> MIN = binary("<?", 50);
+    private static final Consumer<GenericTester> MAX = binary(">?", 50);
+
+
     // === Unchecked integers
 
     @SuppressWarnings("Convert2MethodRef")
@@ -109,6 +122,9 @@ public final class GenericTest {
             .binary("*", (a, b) -> a * b)
             .binary("/", (a, b) -> a / b)
             .unary("-", a -> -a)
+
+            .binary("<?", Math::min)
+            .binary(">?", Math::max)
 
             .binary("<", (a, b) -> a < b ? 1 : 0)
             .binary(">", (a, b) -> a > b ? 1 : 0)
@@ -128,6 +144,9 @@ public final class GenericTest {
             .binary("*", (a, b) -> a * b)
             .binary("/", (a, b) -> a / b)
             .unary("-", a -> -a)
+
+            .binary("<?", Math::min)
+            .binary(">?", Math::max)
 
             .binary("<", (a, b) -> a < b ? 1L : 0)
             .binary(">", (a, b) -> a > b ? 1L : 0)
@@ -150,6 +169,9 @@ public final class GenericTest {
             .binary("*", (a, b) -> (a * b) >> FIXED)
             .binary("/", (a, b) -> (a / b) << FIXED)
             .unary("-", a -> -a)
+
+            .binary("<?", Math::min)
+            .binary(">?", Math::max)
 
             .binary("<", (a, b) -> a < b ? 1 << FIXED : 0)
             .binary(">", (a, b) -> a > b ? 1 << FIXED : 0)
@@ -177,6 +199,7 @@ public final class GenericTest {
     public static final Selector SELECTOR = Selector.composite(GenericTest.class, GenericTester::new, "easy", "hard")
             .variant("Base", INTEGER_CHECKED, DOUBLE, BIG_INTEGER, ADD, SUBTRACT, MULTIPLY, DIVIDE, NEGATE)
             .variant("3637", PARENS, LESS, LESS_EQ, GREATER, GREATER_EQ, EQUAL, NOT_EQUAL, INTEGER_UNCHECKED, LONG)
+            .variant("3839", PARENS, LESS, LESS_EQ, GREATER, GREATER_EQ, EQUAL, NOT_EQUAL, MIN, MAX, INTEGER_UNCHECKED, INTEGER_FIXED)
             .selector();
 
     private static <T> GenericTester.Mode.Builder<T> mode(final String mode, final IntFunction<T> constant) {

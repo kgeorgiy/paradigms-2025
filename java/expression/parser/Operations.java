@@ -28,6 +28,10 @@ public final class Operations {
     public static final Operation EQUAL = binary("==", 22, (a, b) -> a == b ? 1 : 0);
     public static final Operation NOT_EQUAL = binary("!=", 22, (a, b) -> a != b ? 1 : 0);
 
+    // === Min, Max
+
+    public static final Operation MIN = binary("<?", 401, Math::min);
+    public static final Operation MAX = binary(">?", 401, Math::max);
 
     // === Common
 
