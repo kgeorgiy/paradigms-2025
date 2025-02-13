@@ -21,6 +21,7 @@ public final class ExceptionsTest {
     // === Common
     public static final Selector SELECTOR = Selector.composite(ExceptionsTest.class, ExceptionsTester::new, "easy", "hard")
             .variant("Base", TRIPLE, ADD, SUBTRACT, MULTIPLY, DIVIDE, NEGATE)
+            .variant("3233", PARENS, AREA, PERIMETER)
             .variant("3435", PARENS, AREA, PERIMETER, SQRT)
             .variant("3637", PARENS, LESS, LESS_EQ, GREATER, GREATER_EQ, EQUAL, NOT_EQUAL)
             .variant("3839", PARENS, LESS, LESS_EQ, GREATER, GREATER_EQ, EQUAL, NOT_EQUAL, MIN, MAX)

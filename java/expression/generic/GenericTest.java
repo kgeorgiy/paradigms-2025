@@ -216,6 +216,7 @@ public final class GenericTest {
 
     public static final Selector SELECTOR = Selector.composite(GenericTest.class, GenericTester::new, "easy", "hard")
             .variant("Base", INTEGER_CHECKED, DOUBLE, BIG_INTEGER, ADD, SUBTRACT, MULTIPLY, DIVIDE, NEGATE)
+            .variant("3233", PARENS, AREA, PERIMETER)
             .variant("3435", PARENS, AREA, PERIMETER)
             .variant("3637", PARENS, LESS, LESS_EQ, GREATER, GREATER_EQ, EQUAL, NOT_EQUAL, INTEGER_UNCHECKED, LONG)
             .variant("3839", PARENS, LESS, LESS_EQ, GREATER, GREATER_EQ, EQUAL, NOT_EQUAL, MIN, MAX, INTEGER_UNCHECKED, INTEGER_FIXED)
