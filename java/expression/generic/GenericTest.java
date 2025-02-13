@@ -1,6 +1,7 @@
 package expression.generic;
 
 import base.Selector;
+import expression.parser.Operations;
 
 import java.math.BigInteger;
 import java.util.function.*;
@@ -41,6 +42,8 @@ public final class GenericTest {
             .binary("==", (a, b) -> a.equals(b) ? 1 : 0)
             .binary("!=", (a, b) -> !a.equals(b) ? 1 : 0)
 
+            .binary("area", (a, b) -> i(Operations.area(a, b)))
+            .binary("perimeter", (a, b) -> i(Operations.perimeter(a, b)))
             ;
 
     // === Doubles
@@ -66,6 +69,8 @@ public final class GenericTest {
             .binary("==", d(v -> v == 0))
             .binary("!=", d(v -> v != 0))
 
+            .binary("area", (a, b) -> a * b / 2)
+            .binary("perimeter", (a, b) -> (a + b) * 2)
             ;
 
     // === BigIntegers
@@ -91,6 +96,8 @@ public final class GenericTest {
             .binary("==", bi(v -> v == 0))
             .binary("!=", bi(v -> v != 0))
 
+            .binary("area", (a, b) -> a.multiply(b).divide(BigInteger.TWO))
+            .binary("perimeter", (a, b) -> a.add(b).multiply(BigInteger.TWO))
             ;
 
 
@@ -113,6 +120,11 @@ public final class GenericTest {
     private static final Consumer<GenericTester> MAX = binary(">?", 50);
 
 
+    // === Geometry
+    private static final Consumer<GenericTester> AREA = binary("area", 10);
+    private static final Consumer<GenericTester> PERIMETER = binary("perimeter", 10);
+
+
     // === Unchecked integers
 
     @SuppressWarnings("Convert2MethodRef")
@@ -133,6 +145,8 @@ public final class GenericTest {
             .binary("==", (a, b) -> a.equals(b) ? 1 : 0)
             .binary("!=", (a, b) -> !a.equals(b) ? 1 : 0)
 
+            .binary("area", (a, b) -> a * b / 2)
+            .binary("perimeter", (a, b) -> (a + b) * 2)
             ;
 
 
@@ -156,6 +170,8 @@ public final class GenericTest {
             .binary("==", (a, b) -> a.equals(b) ? 1L : 0)
             .binary("!=", (a, b) -> !a.equals(b) ? 1L : 0)
 
+            .binary("area", (a, b) -> a * b / 2)
+            .binary("perimeter", (a, b) -> (a + b) * 2)
             ;
 
 
@@ -180,6 +196,8 @@ public final class GenericTest {
             .binary("==", (a, b) -> a.equals(b) ? 1 << FIXED : 0)
             .binary("!=", (a, b) -> !a.equals(b) ? 1 << FIXED : 0)
 
+            .binary("area", (a, b) -> a * b / 2 >> FIXED)
+            .binary("perimeter", (a, b) -> (a + b) * 2)
             ;
 
 
@@ -198,6 +216,7 @@ public final class GenericTest {
 
     public static final Selector SELECTOR = Selector.composite(GenericTest.class, GenericTester::new, "easy", "hard")
             .variant("Base", INTEGER_CHECKED, DOUBLE, BIG_INTEGER, ADD, SUBTRACT, MULTIPLY, DIVIDE, NEGATE)
+            .variant("3435", PARENS, AREA, PERIMETER)
             .variant("3637", PARENS, LESS, LESS_EQ, GREATER, GREATER_EQ, EQUAL, NOT_EQUAL, INTEGER_UNCHECKED, LONG)
             .variant("3839", PARENS, LESS, LESS_EQ, GREATER, GREATER_EQ, EQUAL, NOT_EQUAL, MIN, MAX, INTEGER_UNCHECKED, INTEGER_FIXED)
             .selector();

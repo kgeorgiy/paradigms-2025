@@ -33,6 +33,26 @@ public final class Operations {
     public static final Operation MIN = binary("<?", 401, Math::min);
     public static final Operation MAX = binary(">?", 401, Math::max);
 
+    // ===  Geometry
+
+    public static final Reason NEGATIVE_SIDE = new Reason("Negative side");
+
+    public static long area(final long a, final long b) {
+        return a < 0 || b < 0 ? NEGATIVE_SIDE.error() : a * b / 2;
+    }
+
+    public static long perimeter(final long a, final long b) {
+        return a < 0 || b < 0 ? NEGATIVE_SIDE.error() : (a + b) * 2;
+    }
+
+    public static final Operation AREA = binary("area", 22, FullOperations::area);
+    public static final Operation PERIMETER = binary("perimeter", 22, FullOperations::perimeter);
+
+    // === Sqrt
+
+    private static final Reason NEGATIVE_SQRT = new Reason("Square root of negative value");
+    public static final Operation SQRT = unary("sqrt", 1, NEGATIVE_SQRT.less(0, a -> (long) Math.sqrt(a)));
+
     // === Common
 
     private Operations() {
