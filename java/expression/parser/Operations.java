@@ -45,8 +45,8 @@ public final class Operations {
         return a < 0 || b < 0 ? NEGATIVE_SIDE.error() : (a + b) * 2;
     }
 
-    public static final Operation AREA = binary("area", 22, FullOperations::area);
-    public static final Operation PERIMETER = binary("perimeter", 22, FullOperations::perimeter);
+    public static final Operation AREA = binary("area", 22, Operations::area);
+    public static final Operation PERIMETER = binary("perimeter", 22, Operations::perimeter);
 
     // === Sqrt
 
