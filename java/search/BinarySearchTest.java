@@ -59,45 +59,13 @@ public final class BinarySearchTest {
                             .test(Kind.ASC, variant, u, u.length > 100 ? 10 : Integer.MAX_VALUE));
 
 
-    // === 38, 39
-    private static final FullBinarySearchTest.Sorted TEST_3839 = (variant, a, b) -> uni(
-            a, b, (t, u) -> {
-                final int i1 = Math.max(t - 1, 0);
-                final int i2 = Math.min(t, u.length - 1);
-                variant.test(u[i1] >= u[i2] ? i1 : i2, u);
-            }
-    );
-
-
-    // === 34, 35
-    private static final FullBinarySearchTest.Sorted TEST_3435 = (tester, a, b) -> {
-        for (int k = 0; k < a.length; k++) {
-            tester.test(Math.min(a[k], a[(k + a.length - 1) % a.length]), a);
-
-            final int last = a[a.length - 1];
-            System.arraycopy(a, 0, a, 1, a.length - 1);
-            a[0] = last;
-        }
-    };
-
-
-    // == 32, 33
-    private static final Solver TEST_3233 = (c, x, a) -> {
-        final int index = range(0, a.length).filter(i -> a[i] == x || Integer.compare(x, a[i]) == c).findFirst().orElse(
-                a.length);
-        return index < a.length && a[index] == x ? index : -1 - index;
-    };
-
-
     // === Common code
 
     public static final Selector SELECTOR
             = new Selector(BinarySearchTest.class)
                     .variant("Base",        Solver.variant0("", Kind.DESC, BinarySearchTest::base))
-                    .variant("3233",        Solver.variant0("3233", Kind.DESC, TEST_3233))
-                    .variant("3435",        sorted("3435",    Kind.ASC, TEST_3435))
                     .variant("3637",        sorted("3637",    Kind.DESC,  TEST_3637))
-                    .variant("3839",        sorted("3839",    Kind.ASC, TEST_3839));
+                    ;
 
     public static void main(final String... args) {
         SELECTOR.main(args);
