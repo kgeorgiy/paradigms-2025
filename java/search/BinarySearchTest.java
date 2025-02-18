@@ -59,13 +59,22 @@ public final class BinarySearchTest {
                             .test(Kind.ASC, variant, u, u.length > 100 ? 10 : Integer.MAX_VALUE));
 
 
+    // === 38, 39
+    private static final Sorted TEST_3839 = (variant, a, b) -> uni(
+            a, b, (t, u) -> {
+                final int i1 = Math.max(t - 1, 0);
+                final int i2 = Math.min(t, u.length - 1);
+                variant.test(u[i1] >= u[i2] ? i1 : i2, u);
+            }
+    );
+
     // === Common code
 
     public static final Selector SELECTOR
             = new Selector(BinarySearchTest.class)
                     .variant("Base",        Solver.variant0("", Kind.DESC, BinarySearchTest::base))
                     .variant("3637",        sorted("3637",    Kind.DESC,  TEST_3637))
-            ;
+                    .variant("3839",        sorted("3839",    Kind.ASC, TEST_3839));
 
     public static void main(final String... args) {
         SELECTOR.main(args);
