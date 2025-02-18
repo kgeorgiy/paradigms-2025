@@ -31,7 +31,7 @@ public final class BinarySearchTest {
 
     // === 36, 37
 
-    /* package-private */ static Consumer<TestCounter> sorted(final String name, final Kind kind, final FullBinarySearchTest.Sorted solver) {
+    /* package-private */ static Consumer<TestCounter> sorted(final String name, final Kind kind, final Sorted solver) {
         final Sampler sampler = new Sampler(kind, false, false);
         return variant(name, variant -> {
             for (final int s : SIZES) {
@@ -53,7 +53,7 @@ public final class BinarySearchTest {
         }
     }
 
-    private static final FullBinarySearchTest.Sorted TEST_3637 = (variant, a, b) ->
+    private static final Sorted TEST_3637 = (variant, a, b) ->
             uni(a, b, (k, u) ->
                     ((Solver) (c, x, args) -> range(0, args.length).filter(i -> args[i] == x).findFirst().orElse(-1))
                             .test(Kind.ASC, variant, u, u.length > 100 ? 10 : Integer.MAX_VALUE));
@@ -65,7 +65,7 @@ public final class BinarySearchTest {
             = new Selector(BinarySearchTest.class)
                     .variant("Base",        Solver.variant0("", Kind.DESC, BinarySearchTest::base))
                     .variant("3637",        sorted("3637",    Kind.DESC,  TEST_3637))
-                    ;
+            ;
 
     public static void main(final String... args) {
         SELECTOR.main(args);
@@ -166,5 +166,9 @@ public final class BinarySearchTest {
             }
             return ints;
         }
+    }
+
+    /* package-private */ interface Sorted {
+        void test(final Variant variant, final int[] a, final int[] b);
     }
 }
