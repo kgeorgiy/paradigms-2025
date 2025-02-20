@@ -68,11 +68,25 @@ public final class BinarySearchTest {
             }
     );
 
+
+    // === 34, 35
+    private static final Sorted TEST_3435 = (tester, a, b) -> {
+        for (int k = 0; k < a.length; k++) {
+            tester.test(Math.min(a[k], a[(k + a.length - 1) % a.length]), a);
+
+            final int last = a[a.length - 1];
+            System.arraycopy(a, 0, a, 1, a.length - 1);
+            a[0] = last;
+        }
+    };
+    
+
     // === Common code
 
     public static final Selector SELECTOR
             = new Selector(BinarySearchTest.class)
                     .variant("Base",        Solver.variant0("", Kind.DESC, BinarySearchTest::base))
+                    .variant("3435",        sorted("3435",    Kind.ASC, TEST_3435))
                     .variant("3637",        sorted("3637",    Kind.DESC,  TEST_3637))
                     .variant("3839",        sorted("3839",    Kind.ASC, TEST_3839));
 
