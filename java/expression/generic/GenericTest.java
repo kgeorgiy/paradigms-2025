@@ -182,8 +182,8 @@ public final class GenericTest {
     private static final GenericTester.Mode.Builder<Integer> INTEGER_FIXED = mode("ifix", a -> a << FIXED)
             .binary("+", (a, b) -> a + b)
             .binary("-", (a, b) -> a - b)
-            .binary("*", (a, b) -> (a * b) >> FIXED)
-            .binary("/", (a, b) -> (a / b) << FIXED)
+            .binary("*", (a, b) -> (int) (Math.multiplyFull(a, b) >> FIXED))
+            .binary("/", (a, b) -> (int) (((long) a << FIXED) / b))
             .unary("-", a -> -a)
 
             .binary("<?", Math::min)
