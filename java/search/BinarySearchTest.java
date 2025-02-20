@@ -79,13 +79,20 @@ public final class BinarySearchTest {
             a[0] = last;
         }
     };
-    
+
+    // == 32, 33
+    private static final Solver TEST_3233 = (c, x, a) -> {
+        final int index = range(0, a.length).filter(i -> a[i] == x || Integer.compare(x, a[i]) == c).findFirst().orElse(
+                a.length);
+        return index < a.length && a[index] == x ? index : -1 - index;
+    };
 
     // === Common code
 
     public static final Selector SELECTOR
             = new Selector(BinarySearchTest.class)
                     .variant("Base",        Solver.variant0("", Kind.DESC, BinarySearchTest::base))
+                    .variant("3233",        Solver.variant0("3233", Kind.DESC, TEST_3233))
                     .variant("3435",        sorted("3435",    Kind.ASC, TEST_3435))
                     .variant("3637",        sorted("3637",    Kind.DESC,  TEST_3637))
                     .variant("3839",        sorted("3839",    Kind.ASC, TEST_3839));
