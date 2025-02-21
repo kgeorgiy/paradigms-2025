@@ -2,6 +2,16 @@
 
 [Условия домашних заданий](https://www.kgeorgiy.info/courses/paradigms/homeworks.html)
 
+
+## Домашнее задание 5. Очереди
+
+Модификации
+ * *Базовая*
+    * [Исходный код тестов](java/queue/QueueTest.java)
+    * [Откомпилированные тесты](artifacts/queue/QueueTest.jar)
+    * Для работы тестов необходимо добавить опцию JVM `--add-opens java.base/java.util=ALL-UNNAMED`
+
+
 ## Домашнее задание 4. Очередь на массиве
 
 Модификации
