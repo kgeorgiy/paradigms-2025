@@ -31,6 +31,10 @@ public final class BinarySearchTest {
 
     // === 36, 37
 
+    /* package-private */ interface Sorted {
+        void test(final Variant variant, final int[] a, final int[] b);
+    }
+
     /* package-private */ static Consumer<TestCounter> sorted(final String name, final Kind kind, final Sorted solver) {
         final Sampler sampler = new Sampler(kind, false, false);
         return variant(name, variant -> {
@@ -80,12 +84,14 @@ public final class BinarySearchTest {
         }
     };
 
+
     // == 32, 33
     private static final Solver TEST_3233 = (c, x, a) -> {
         final int index = range(0, a.length).filter(i -> a[i] == x || Integer.compare(x, a[i]) == c).findFirst().orElse(
                 a.length);
         return index < a.length && a[index] == x ? index : -1 - index;
     };
+
 
     // === Common code
 
@@ -196,9 +202,5 @@ public final class BinarySearchTest {
             }
             return ints;
         }
-    }
-
-    /* package-private */ interface Sorted {
-        void test(final Variant variant, final int[] a, final int[] b);
     }
 }

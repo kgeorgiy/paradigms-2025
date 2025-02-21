@@ -41,19 +41,19 @@ public final class Queues {
         }
     }
 
-    protected interface QueueChecker<T extends QueueModel> {
-        T wrap(ArrayDeque<Object> reference);
+    protected interface QueueChecker<M extends QueueModel> {
+        M wrap(ArrayDeque<Object> reference);
 
-        default List<T> linearTest(final T queue, final ExtendedRandom random) {
+        default List<M> linearTest(final M queue, final ExtendedRandom random) {
             // Do nothing by default
             return List.of();
         }
 
-        default void check(final T queue, final ExtendedRandom random) {
+        default void check(final M queue, final ExtendedRandom random) {
             queue.element();
         }
 
-        default void add(final T queue, final Object element, final ExtendedRandom random) {
+        default void add(final M queue, final Object element, final ExtendedRandom random) {
             queue.enqueue(element);
         }
 
@@ -61,13 +61,13 @@ public final class Queues {
             return ArrayQueueTester.ELEMENTS[random.nextInt(ArrayQueueTester.ELEMENTS.length)];
         }
 
-        default void remove(final T queue, final ExtendedRandom random) {
+        default void remove(final M queue, final ExtendedRandom random) {
             queue.dequeue();
         }
 
         @SuppressWarnings("unchecked")
-        default T cast(final QueueModel model) {
-            return (T) model;
+        default M cast(final QueueModel model) {
+            return (M) model;
         }
     }
 
