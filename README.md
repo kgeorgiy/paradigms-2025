@@ -3,6 +3,51 @@
 [Условия домашних заданий](https://www.kgeorgiy.info/courses/paradigms/homeworks.html)
 
 
+## Тестовое задание на JavaScript
+
+Это задание предназначено для проверки правильности настройки
+[JavaScript](https://ecma-international.org/publications-and-standards/standards/ecma-262/).
+Вам надо проверить, что оно успешно проверяется на вашем компьютере.
+
+Модификации
+ * *base*
+    * Код решения `java-solutions/example.js` в
+      [репозитории решений](https://www.kgeorgiy.info/git/geo/paradigms-2025-students/).
+      Если всё настроено верно, то вам достаточно сделать `git pull --rebase` в своём репозитории,
+      чтобы получить решение.
+    * [Исходный код тестов](javascript/jstest/example/ExampleTest.java)
+        * Запускать c аргументом `hard` или `easy`.
+
+Запуск тестов
+ * Для запуска тестов используется [GraalJS](https://github.com/graalvm/graaljs)
+   (часть проекта [GraalVM](https://www.graalvm.org/)), но вам не требуется их скачивать.
+ * Для запуска тестов рекомендуется использовать скрипты
+   [TestJS.cmd](javascript/TestJS.cmd) и [TestJS.sh](javascript/TestJS.sh)
+    * Репозиторий должен быть скачан целиком.
+    * Скрипты должны находиться в каталоге `javascript` (их нельзя перемещать, но можно вызывать из других каталогов).
+    * В качестве аргументов командной строки указывается полное имя класса теста и модификация,
+      например `jstest.example.ExampleTest hard base`.
+ * Для самостоятельно запуска из консоли необходимо использовать командную строку вида:
+    `java -ea --module-path=<js>/graal --class-path <js> jstest.example.ExampleTest {hard|easy} <variant>`, где
+    * `-ea` – включение проверок времени исполнения;
+    * `--module-path=<js>/graal` путь к модулям Graal (здесь и далее `<js>` путь к каталогу `javascript` этого репозитория);
+    * `--class-path <js>` путь к откомпилированным тестам;
+    * `{hard|easy}` указание тестируемой сложности;
+    * `<variant>` указание тестируемой модификации.
+ * При запуске из IDE, обычно не требуется указывать `--class-path`, так как он формируется автоматически.
+   Остальные опции все равно необходимо указать.
+ * Troubleshooting
+    * `Error occurred during initialization of boot layer java.lang.module.FindException: Module org.graalvm.truffle not found, required by jdk.internal.vm.compiler`
+      – неверно указан `--module-path`;
+    * `Graal.js not found` – неверно указаны `--module-path`
+    * `Error: Could not find or load main class jstest.example.ExampleTest`
+      – неверно указан `--class-path`;
+    * `Exception in thread "main" java.lang.AssertionError: You should enable assertions by running 'java -ea jstest.functional.FunctionalExpressionTest'`
+      – не указана опция `-ea`;
+    * `Exception in thread "main" jstest.EngineException: Script 'example.js' not found`
+      – в текущем каталоге отсутствует решение (`example.js`)
+
+
 ## Домашнее задание 5. Очереди
 
 Модификации
