@@ -12,7 +12,7 @@ public final class Selector {
     private final Class<?> owner;
     private final List<String> modes;
     private final Set<String> variantNames = new LinkedHashSet<>();
-    private final Map<String, Consumer<TestCounter>> variants = new HashMap<>();
+    private final Map<String, Consumer<TestCounter>> variants = new LinkedHashMap<>();
 
     public Selector(final Class<?> owner, final String... modes) {
         this.owner = owner;
@@ -75,6 +75,7 @@ public final class Selector {
                                                ? Map.of("variant", String.join("+", vars))
                                                : Map.of("variant", String.join("+", vars), "mode", mode);
         final TestCounter counter = new TestCounter(owner, modeNo, properties);
+        counter.printHead();
         vars.forEach(variant -> counter.scope("Testing " + variant, () -> variants.get(variant.toLowerCase()).accept(counter)));
         counter.printStatus();
     }

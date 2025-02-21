@@ -78,12 +78,20 @@ public class TestCounter extends Log {
         return getIndent() == 0 ? "=" : "-";
     }
 
+    public void printHead() {
+        println("=== " + getTitle());
+    }
+
     public void printStatus() {
-        final String title = String.format("%s %s", owner.getSimpleName(), properties.isEmpty() ? "" : properties);
+        final String title = getTitle();
         format("%s%n%s%n", getLine().repeat(30), title);
         format("%d tests passed in %d ms%n", passed, System.currentTimeMillis() - start);
         println("Version: " + getVersion(owner));
         println("");
+    }
+
+    private String getTitle() {
+        return String.format("%s %s", owner.getSimpleName(), properties.isEmpty() ? "" : properties);
     }
 
     private static String getVersion(final Class<?> clazz) {
