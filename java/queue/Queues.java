@@ -275,6 +275,10 @@ public final class Queues {
             }
         }
     }
+    
+    // === 3839
+    /* package-private */ interface DequeIndexedToStrModel extends DequeIndexedModel, ToStrModel {}
+    /* package-private */ static final LinearTester<DequeIndexedToStrModel> DEQUE_INDEXED_TO_STR = TO_STR::test;
 
 
     // === 3637
@@ -301,5 +305,78 @@ public final class Queues {
                 ? queue.filter(random.nextBoolean() ? Predicate.isEqual(tester.randomElement(random)) : Predicate.isEqual(tester.randomElement(random)).negate())
                 : queue.map(random.nextBoolean() ? String::valueOf : Object::hashCode);
         return List.of(tester.cast(result));
+    };
+
+
+    // === 3839
+
+    /* package-private */ static Predicate<Object> randomPredicate(final Queues.QueueChecker<? extends Queues.QueueModel> tester, final ExtendedRandom random) {
+        return new Predicate<>() {
+            final Object element = tester.randomElement(random);
+
+            @Override
+            public boolean test(final Object o) {
+                return o == element;
+            }
+
+            @Override
+            public String toString() {
+                return "== " + element;
+            }
+        };
+    }
+
+    /* package-private */ static final Queues.LinearTester<IfWhileModel> IF = (tester, queue, random) -> {
+        if (random.nextBoolean()) {
+            queue.removeIf(randomPredicate(tester, random));
+        } else {
+            queue.retainIf(randomPredicate(tester, random));
+        }
+    };
+
+
+    // === While
+
+    /* package-private */ static final Queues.LinearTester<IfWhileModel> WHILE = (tester, queue, random) -> {
+        if (random.nextBoolean()) {
+            queue.takeWhile(randomPredicate(tester, random));
+        } else {
+            queue.dropWhile(randomPredicate(tester, random));
+        }
+    };
+
+
+    // === IfWhile
+
+    /* package-private */ interface IfWhileModel extends QueueModel {
+        default void removeIf(final Predicate<Object> p) {
+            model().removeIf(p);
+        }
+
+        default void retainIf(final Predicate<Object> p) {
+            model().removeIf(Predicate.not(p));
+        }
+        // Deliberately ugly implementation
+        default void dropWhile(final Predicate<Object> p) {
+            final boolean[] remove = {true};
+            model().removeIf(e -> remove[0] &= p.test(e));
+        }
+
+        // Deliberately ugly implementation
+        default void takeWhile(final Predicate<Object> p) {
+            final boolean[] keep = {true};
+            model().removeIf(e -> !(keep[0] &= p.test(e)));
+        }
+    }
+
+    /* package-private */ static final Queues.LinearTester<IfWhileModel> IF_WHILE = (tester, queue, random) -> {
+        final Predicate<Object> predicate = randomPredicate(tester, random);
+        final Queues.LinearTester<IfWhileModel> test = random.randomItem(
+                (t, q, r) -> q.removeIf(predicate),
+                (t, q, r) -> q.retainIf(predicate),
+                (t, q, r) -> q.dropWhile(predicate),
+                (t, q, r) -> q.takeWhile(predicate)
+        );
+        test.test(tester, queue, random);
     };
 }
